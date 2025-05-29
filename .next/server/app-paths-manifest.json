@@ -1,0 +1,13 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/login/page": "app/admin/login/page.js",
+  "/admin_dashboard/page": "app/admin_dashboard/page.js",
+  "/admin_dashboard/products/add/page": "app/admin_dashboard/products/add/page.js",
+  "/admin_dashboard/products/page": "app/admin_dashboard/products/page.js",
+  "/admin_dashboard/reviews/page": "app/admin_dashboard/reviews/page.js",
+  "/api/admin/auth/route": "app/api/admin/auth/route.js",
+  "/api/admin/products/route": "app/api/admin/products/route.js",
+  "/api/admin/reviews/pending/route": "app/api/admin/reviews/pending/route.js",
+  "/api/admin/stats/route": "app/api/admin/stats/route.js",
+  "/page": "app/page.js"
+}
