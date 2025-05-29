@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Внешние пакеты для сервера
-  serverExternalPackages: ['jsonwebtoken'],
+  // Убираем полный статический экспорт, используем гибридный режим
+  // output: 'export', // Закомментировано для сохранения API
+  
+  // Добавляет trailing slash к URL
+  trailingSlash: true,
+  
+  // Пропускаем перенаправления trailing slash
+  skipTrailingSlashRedirect: true,
   
   // Оптимизация изображений
   images: {
@@ -11,12 +17,21 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
 
+  // Внешние пакеты для сервера
+  serverExternalPackages: ['jsonwebtoken'],
+
   // Компрессия
   compress: true,
   
   // Оптимизация для production
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Генерация статических страниц
+  generateStaticParams: async () => {
+    // Здесь можно определить статические параметры для динамических маршрутов
+    return [];
   },
 
   // Webpack оптимизации
@@ -45,6 +60,12 @@ const nextConfig = {
     return config;
   },
 
+  // Настройка базового пути (если нужно разместить не в корне)
+  // basePath: '/my-app',
+  
+  // Префикс для статических ресурсов (если нужен CDN)
+  // assetPrefix: 'https://cdn.mydomain.com',
+
   // Заголовки для оптимизации
   async headers() {
     return [
@@ -59,6 +80,24 @@ const nextConfig = {
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
+      },
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+        ],
+      },
+    ];
+  },
+
+  // Перенаправления
+  async rewrites() {
+    return [
+      {
+        source: '/index.html',
+        destination: '/',
       },
     ];
   },
