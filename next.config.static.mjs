@@ -22,8 +22,8 @@ const staticConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // Папка для вывода статических файлов
-  distDir: 'out',
+  // Папка для вывода статических файлов - корневая папка
+  distDir: '.',
 
   // Webpack оптимизации
   webpack: (config, { isServer }) => {
