@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
       featured: searchParams.get('featured') === 'true',
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
       offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
+      store_id: searchParams.get('store_id') ? parseInt(searchParams.get('store_id')!) : undefined,
     };
 
     const products = await ProductModel.getAll(filters);

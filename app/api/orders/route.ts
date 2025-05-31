@@ -53,20 +53,13 @@ export async function GET(request: NextRequest) {
 // Создание заказа
 export async function POST(request: NextRequest) {
   try {
-    // Получение токена из заголовка авторизации
+    let decoded: any = null;
     const authorization = request.headers.get('authorization');
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { success: false, error: 'Authorization token required' },
-        { status: 401 }
-      );
+    if (authorization && authorization.startsWith('Bearer ')) {
+      const token = authorization.replace('Bearer ', '');
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
     }
 
-    const token = authorization.replace('Bearer ', '');
-    
-    // Верификация токена
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as any;
-    
     const body = await request.json();
     const { items, delivery_address, delivery_date, delivery_time, payment_method, customer_name, customer_phone, customer_email, notes } = body;
 
@@ -78,9 +71,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!customer_name || !customer_phone) {
+    if (!customer_name || !customer_phone || !customer_email || !delivery_address) {
       return NextResponse.json(
-        { success: false, error: 'Customer name and phone are required' },
+        { success: false, error: 'Customer name, phone, email and address are required' },
         { status: 400 }
       );
     }
@@ -96,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     const orderData: CreateOrderData = {
-      user_id: decoded.userId,
+      user_id: decoded?.userId || null,
       customer_name,
       customer_phone,
       customer_email,

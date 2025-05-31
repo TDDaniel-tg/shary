@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import Redis from 'ioredis';
 
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
@@ -8,6 +9,8 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || '5432'),
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
+
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 export interface Product {
   id: number;
@@ -42,46 +45,66 @@ export class ProductModel {
     featured?: boolean;
     limit?: number;
     offset?: number;
+    store_id?: number;
   }): Promise<Product[]> {
+    // Кэшируем только популярные запросы (без поиска)
+    const canCache = redis && !filters?.search;
+    const cacheKey = canCache ? `products:${JSON.stringify(filters)}` : null;
+    if (canCache && cacheKey) {
+      const cached = await redis!.get(cacheKey);
+      if (cached) return JSON.parse(cached);
+    }
     let query = `
-      SELECT p.*, c.name as category_name 
-      FROM products p 
-      LEFT JOIN categories c ON p.category_id = c.id 
-      WHERE p.is_active = true
+      SELECT p.*, c.name as category_name
     `;
+    if (filters?.store_id) {
+      query += ', ps.stock_quantity';
+    }
+    query += ` FROM products p 
+      LEFT JOIN categories c ON p.category_id = c.id 
+    `;
+    if (filters?.store_id) {
+      query += 'LEFT JOIN product_stocks ps ON ps.product_id = p.id AND ps.store_id = $storeId$ ';
+    }
+    query += 'WHERE p.is_active = true';
     const params: any[] = [];
     let paramIndex = 1;
-
     if (filters?.category) {
       query += ` AND c.slug = $${paramIndex}`;
       params.push(filters.category);
       paramIndex++;
     }
-
     if (filters?.search) {
       query += ` AND (p.name ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex})`;
       params.push(`%${filters.search}%`);
       paramIndex++;
     }
-
     if (filters?.featured) {
       query += ` AND p.is_featured = true`;
     }
-
+    if (filters?.store_id) {
+      query += ` AND ps.stock_quantity > 0`;
+    }
     query += ` ORDER BY p.sort_order ASC, p.created_at DESC`;
-
     if (filters?.limit) {
       query += ` LIMIT $${paramIndex}`;
       params.push(filters.limit);
       paramIndex++;
     }
-
     if (filters?.offset) {
       query += ` OFFSET $${paramIndex}`;
       params.push(filters.offset);
     }
-
-    const result = await pool.query(query, params);
+    // Подстановка store_id
+    let finalQuery = query;
+    if (filters?.store_id) {
+      finalQuery = query.replace(/\$storeId\$/g, `$${paramIndex}`);
+      params.push(filters.store_id);
+    }
+    const result = await pool.query(finalQuery, params);
+    if (canCache && cacheKey) {
+      await redis!.set(cacheKey, JSON.stringify(result.rows), 'EX', 60); // 1 минута
+    }
     return result.rows;
   }
 

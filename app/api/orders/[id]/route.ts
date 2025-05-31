@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OrderModel } from '@/lib/models/Order';
+import { OrderModel, sendOrderStatusEmail } from '@/lib/models/Order';
 import jwt from 'jsonwebtoken';
 
 // Получение заказа по ID
@@ -131,12 +131,28 @@ export async function PUT(
       updateData.delivery_date = new Date(updateData.delivery_date);
     }
 
+    const prevStatus = existingOrder.status;
     const updatedOrder = await OrderModel.update(orderId, updateData);
 
     if (!updatedOrder) {
       return NextResponse.json(
         { success: false, error: 'Failed to update order' },
         { status: 500 }
+      );
+    }
+
+    // Если статус изменился и есть email — отправляем уведомление
+    if (
+      decoded.role === 'admin' &&
+      updateData.status &&
+      updateData.status !== prevStatus &&
+      updatedOrder.customer_email &&
+      updatedOrder.order_code
+    ) {
+      await sendOrderStatusEmail(
+        updatedOrder.customer_email,
+        updatedOrder.order_code,
+        updateData.status
       );
     }
 

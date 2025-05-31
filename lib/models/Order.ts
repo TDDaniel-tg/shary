@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import nodemailer from 'nodemailer';
 
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
@@ -11,6 +12,7 @@ const pool = new Pool({
 
 export interface Order {
   id: number;
+  order_code: string;
   user_id?: number;
   customer_name: string;
   customer_phone: string;
@@ -54,6 +56,15 @@ export interface CreateOrderData {
   }[];
 }
 
+function generateOrderCode(orderId: number): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const id = String(orderId).padStart(6, '0');
+  return `ORDER-${y}${m}${d}-${id}`;
+}
+
 export class OrderModel {
   static async create(data: CreateOrderData): Promise<Order> {
     const client = await pool.connect();
@@ -86,7 +97,11 @@ export class OrderModel {
       ];
 
       const orderResult = await client.query(orderQuery, orderValues);
-      const order = orderResult.rows[0];
+      let order = orderResult.rows[0];
+
+      const order_code = generateOrderCode(order.id);
+      await client.query('UPDATE orders SET order_code = $1 WHERE id = $2', [order_code, order.id]);
+      order.order_code = order_code;
 
       for (const item of data.items) {
         const itemQuery = `
@@ -269,4 +284,32 @@ export class OrderModel {
       client.release();
     }
   }
+}
+
+export async function sendOrderStatusEmail(to: string, order_code: string, status: string) {
+  if (!to) return;
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  const statusText = {
+    pending: 'Ожидает подтверждения',
+    confirmed: 'Подтвержден',
+    preparing: 'Готовится',
+    ready: 'Готов к выдаче',
+    delivered: 'Доставлен',
+    cancelled: 'Отменен',
+  };
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || 'shop@example.com',
+    to,
+    subject: `Статус вашего заказа ${order_code} обновлен`,
+    text: `Статус вашего заказа ${order_code} изменен на: ${statusText[status] || status}`,
+    html: `<p>Статус вашего заказа <b>${order_code}</b> изменен на: <b>${statusText[status] || status}</b></p>`
+  });
 } 
