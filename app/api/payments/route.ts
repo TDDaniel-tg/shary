@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { YooKassa } from 'yookassa';
 
 const shopId = process.env.YOOKASSA_SHOP_ID;
 const secretKey = process.env.YOOKASSA_SECRET_KEY;
 const returnUrl = process.env.YOOKASSA_RETURN_URL;
 
-const yookassa = new YooKassa({ shopId, secretKey });
+// Условный импорт YooKassa только если модуль доступен
+let yookassa: any = null;
+if (shopId && secretKey) {
+  try {
+    const { YooKassa } = require('yookassa');
+    yookassa = new YooKassa({ shopId, secretKey });
+  } catch (error) {
+    console.warn('YooKassa module not available');
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
+    if (!yookassa) {
+      return NextResponse.json({ success: false, error: 'Payment system not configured' }, { status: 503 });
+    }
+
     const { orderId, amount, email } = await request.json();
     if (!orderId || !amount || !email) {
       return NextResponse.json({ success: false, error: 'orderId, amount, email required' }, { status: 400 });

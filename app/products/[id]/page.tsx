@@ -53,7 +53,7 @@ const mockProduct: Product = {
 async function getProduct(id: string): Promise<Product | null> {
   try {
     // Попытка получить товар из API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/products/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/products/${id}`, {
       next: { revalidate: 3600 } // Обновляем кеш каждый час
     });
     
@@ -73,7 +73,9 @@ async function getProduct(id: string): Promise<Product | null> {
   return null;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: Props
+): Promise<Metadata> {
   const product = await getProduct(params.id);
   
   if (!product) {
@@ -112,7 +114,9 @@ export async function generateStaticParams() {
   ];
 }
 
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage(
+  { params }: Props
+) {
   const product = await getProduct(params.id);
 
   if (!product) {

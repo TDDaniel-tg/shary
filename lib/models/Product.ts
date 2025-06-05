@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import Redis from 'ioredis';
+import { safeRedisGet, safeRedisSet } from '@/lib/redis';
 
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
@@ -9,8 +9,6 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || '5432'),
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
-
-const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 export interface Product {
   id: number;
@@ -48,14 +46,14 @@ export class ProductModel {
     store_id?: number;
   }): Promise<Product[]> {
     // Кэшируем только популярные запросы (без поиска)
-    const canCache = redis && !filters?.search;
+    const canCache = !filters?.search;
     const cacheKey = canCache ? `products:${JSON.stringify(filters)}` : null;
     if (canCache && cacheKey) {
-      const cached = await redis!.get(cacheKey);
+      const cached = await safeRedisGet(cacheKey);
       if (cached) return JSON.parse(cached);
     }
     let query = `
-      SELECT p.*, c.name as category_name
+      SELECT p.*, c.name as category_name 
     `;
     if (filters?.store_id) {
       query += ', ps.stock_quantity';
@@ -103,7 +101,7 @@ export class ProductModel {
     }
     const result = await pool.query(finalQuery, params);
     if (canCache && cacheKey) {
-      await redis!.set(cacheKey, JSON.stringify(result.rows), 'EX', 60); // 1 минута
+      await safeRedisSet(cacheKey, JSON.stringify(result.rows), 60); // 1 минута
     }
     return result.rows;
   }

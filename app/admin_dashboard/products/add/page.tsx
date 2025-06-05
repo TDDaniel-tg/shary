@@ -1,536 +1,399 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Upload, X, Eye } from 'lucide-react';
-import Image from 'next/image';
+import { Save, X, Upload, RefreshCcw } from 'lucide-react';
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-}
+// Категории товаров (в реальном проекте могут быть загружены с сервера)
+const categories = [
+  { id: 'party', name: 'Праздники' },
+  { id: 'numbers', name: 'Цифры' },
+  { id: 'themed', name: 'Тематические' },
+  { id: 'single', name: 'Однотонные' },
+  { id: 'sets', name: 'Наборы' },
+  { id: 'accessories', name: 'Аксессуары' }
+];
 
-interface ProductFormData {
+interface FormData {
   name: string;
-  slug: string;
   description: string;
-  short_description: string;
   price: string;
-  original_price: string;
-  category_id: string;
-  stock_quantity: string;
-  sku: string;
-  meta_title: string;
-  meta_description: string;
-  is_featured: boolean;
-  tags: string[];
+  salePrice: string;
+  category: string;
+  stock: string;
+  images: File[];
+  featured: boolean;
+  published: boolean;
 }
-
-const initialFormData: ProductFormData = {
-  name: '',
-  slug: '',
-  description: '',
-  short_description: '',
-  price: '',
-  original_price: '',
-  category_id: '',
-  stock_quantity: '',
-  sku: '',
-  meta_title: '',
-  meta_description: '',
-  is_featured: false,
-  tags: []
-};
 
 export default function AddProductPage() {
-  const [formData, setFormData] = useState<ProductFormData>(initialFormData);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const [tagInput, setTagInput] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
-
-  // Загрузка категорий
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/api/categories');
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        // Моковые данные
-        setCategories([
-          { id: 1, name: 'Воздушные шары', slug: 'balloons' },
-          { id: 2, name: 'Детские праздники', slug: 'kids-parties' },
-          { id: 3, name: 'Свадебные украшения', slug: 'wedding' },
-          { id: 4, name: 'Праздничная посуда', slug: 'tableware' }
-        ]);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  // Автогенерация slug из названия
-  useEffect(() => {
-    if (formData.name && !formData.slug) {
-      const slug = formData.name
-        .toLowerCase()
-        .replace(/[^a-zа-я0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
-      setFormData(prev => ({ ...prev, slug }));
-    }
-  }, [formData.name, formData.slug]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+  const [submitting, setSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    description: '',
+    price: '',
+    salePrice: '',
+    category: '',
+    stock: '',
+    images: [],
+    featured: false,
+    published: true
+  });
+  
+  // Обработка изменения текстовых полей формы
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: value
     }));
   };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  
+  // Обработка изменения чекбоксов
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+    }));
   };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview('');
-  };
-
-  const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+  
+  // Обработка загрузки изображений
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      
+      // Создаем превью изображений
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setImagePreview(prev => [...prev, ...newPreviews]);
+      
+      // Добавляем файлы в форму
       setFormData(prev => ({
         ...prev,
-        tags: [...prev.tags, tagInput.trim()]
+        images: [...prev.images, ...newFiles]
       }));
-      setTagInput('');
     }
   };
-
-  const removeTag = (tagToRemove: string) => {
+  
+  // Удаление загруженного изображения
+  const handleRemoveImage = (index: number) => {
+    // Удаляем превью
+    const newPreviews = [...imagePreview];
+    URL.revokeObjectURL(newPreviews[index]); // Освобождаем память
+    newPreviews.splice(index, 1);
+    setImagePreview(newPreviews);
+    
+    // Удаляем файл из состояния
+    const newImages = [...formData.images];
+    newImages.splice(index, 1);
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      images: newImages
     }));
   };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) newErrors.name = 'Название обязательно';
-    if (!formData.description.trim()) newErrors.description = 'Описание обязательно';
-    if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Укажите корректную цену';
-    if (!formData.category_id) newErrors.category_id = 'Выберите категорию';
-    if (!formData.stock_quantity || parseInt(formData.stock_quantity) < 0) newErrors.stock_quantity = 'Укажите количество на складе';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
+  
+  // Отправка формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-
-    setLoading(true);
-
+    if (!formData.name || !formData.price || !formData.category || !formData.stock) {
+      alert('Пожалуйста, заполните все обязательные поля');
+      return;
+    }
+    
     try {
-      const token = localStorage.getItem('admin-token');
-      if (!token) {
-        router.push('/admin/login');
-        return;
-      }
-
-      // Создаем FormData для отправки файла
-      const formDataToSend = new FormData();
+      setSubmitting(true);
       
-      // Добавляем все поля формы
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'tags') {
-          formDataToSend.append(key, JSON.stringify(value));
-        } else {
-          formDataToSend.append(key, value.toString());
-        }
-      });
-
-      // Добавляем файл изображения
-      if (imageFile) {
-        formDataToSend.append('image', imageFile);
-      }
-
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formDataToSend
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert('Товар успешно добавлен!');
-        router.push('/admin_dashboard/products');
-      } else {
-        alert(result.error || 'Ошибка при добавлении товара');
-      }
+      // В реальном проекте здесь должен быть запрос к API для создания товара и загрузки изображений
+      // const formDataToSend = new FormData();
+      // Object.keys(formData).forEach(key => {
+      //   if (key === 'images') {
+      //     formData.images.forEach(image => {
+      //       formDataToSend.append('images', image);
+      //     });
+      //   } else {
+      //     formDataToSend.append(key, formData[key]);
+      //   }
+      // });
+      
+      // const response = await fetch('/api/admin/products', {
+      //   method: 'POST',
+      //   body: formDataToSend
+      // });
+      
+      // Имитация задержки запроса
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Имитация успешного ответа
+      alert('Товар успешно добавлен!');
+      router.push('/admin_dashboard/products');
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Ошибка при добавлении товара:', error);
       alert('Произошла ошибка при добавлении товара');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
-
+  
+  // Отмена и возврат на страницу списка товаров
+  const handleCancel = () => {
+    if (window.confirm('Вы уверены, что хотите отменить создание товара? Все введенные данные будут потеряны.')) {
+      router.push('/admin_dashboard/products');
+    }
+  };
+  
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/admin_dashboard"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+    <div className="p-6">
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">Добавление нового товара</h1>
+        <div className="space-x-2">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
           >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Назад к панели управления
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Добавить новый товар</h1>
+            <X className="h-4 w-4 mr-2" />
+            Отмена
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {submitting ? (
+              <RefreshCcw className="animate-spin h-4 w-4 mr-2" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Сохранить
+          </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Основная информация */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Основная информация</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      </div>
+      
+      <div className="bg-white shadow-sm rounded-lg">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Основная информация */}
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Название товара *
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Название товара <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  id="name"
                   name="name"
+                  required
                   value={formData.name}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Набор воздушных шаров..."
+                  onChange={handleChange}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
                 />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL slug
-                </label>
-                <input
-                  type="text"
-                  name="slug"
-                  value={formData.slug}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="nabor-vozdushnyh-sharov"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Краткое описание
-                </label>
-                <input
-                  type="text"
-                  name="short_description"
-                  value={formData.short_description}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="Краткое описание для превью..."
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Полное описание *
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
-                    errors.description ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Подробное описание товара..."
-                />
-                {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
-              </div>
-            </div>
-          </div>
-
-          {/* Цена и категория */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Цена и категория</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Цена *
-                </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
-                    errors.price ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="1500"
-                  min="0"
-                  step="0.01"
-                />
-                {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Старая цена
-                </label>
-                <input
-                  type="number"
-                  name="original_price"
-                  value={formData.original_price}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="2000"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Категория *
-                </label>
-                <select
-                  name="category_id"
-                  value={formData.category_id}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
-                    errors.category_id ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Выберите категорию</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.category_id && <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Количество на складе *
-                </label>
-                <input
-                  type="number"
-                  name="stock_quantity"
-                  value={formData.stock_quantity}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 ${
-                    errors.stock_quantity ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="100"
-                  min="0"
-                />
-                {errors.stock_quantity && <p className="text-red-500 text-sm mt-1">{errors.stock_quantity}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Артикул (SKU)
-                </label>
-                <input
-                  type="text"
-                  name="sku"
-                  value={formData.sku}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="BAL-001"
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="is_featured"
-                    checked={formData.is_featured}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Рекомендуемый товар</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Изображение */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Изображение товара</h2>
-            
-            <div className="space-y-4">
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <Image
-                    src={imagePreview}
-                    alt="Preview"
-                    width={200}
-                    height={200}
-                    className="rounded-lg object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <label className="cursor-pointer">
-                    <span className="text-sm text-gray-600">
-                      Нажмите для загрузки изображения или перетащите файл сюда
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Теги */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Теги</h2>
-            
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="Введите тег и нажмите Enter"
-                />
-                <button
-                  type="button"
-                  onClick={addTag}
-                  className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600"
-                >
-                  Добавить
-                </button>
               </div>
               
-              {formData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                    >
-                      {tag}
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  Описание
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={4}
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                    Цена <span className="text-red-500">*</span>
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">₽</span>
+                    </div>
+                    <input
+                      type="number"
+                      id="price"
+                      name="price"
+                      min="0"
+                      step="1"
+                      required
+                      value={formData.price}
+                      onChange={handleChange}
+                      className="pl-7 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700">
+                    Цена со скидкой
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">₽</span>
+                    </div>
+                    <input
+                      type="number"
+                      id="salePrice"
+                      name="salePrice"
+                      min="0"
+                      step="1"
+                      value={formData.salePrice}
+                      onChange={handleChange}
+                      className="pl-7 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                    Категория <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="category"
+                    name="category"
+                    required
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                  >
+                    <option value="">Выберите категорию</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+                    Количество в наличии <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="stock"
+                    name="stock"
+                    min="0"
+                    step="1"
+                    required
+                    value={formData.stock}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center">
+                  <input
+                    id="featured"
+                    name="featured"
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">
+                    Рекомендуемый товар
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    id="published"
+                    name="published"
+                    type="checkbox"
+                    checked={formData.published}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="published" className="ml-2 block text-sm text-gray-700">
+                    Опубликован
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Загрузка изображений */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Изображения товара
+                </label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="flex text-sm text-gray-600">
+                      <label
+                        htmlFor="images"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-pink-500"
+                      >
+                        <span>Загрузить изображения</span>
+                        <input
+                          id="images"
+                          name="images"
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageUpload}
+                          className="sr-only"
+                        />
+                      </label>
+                      <p className="pl-1">или перетащите их сюда</p>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      PNG, JPG, GIF до 10MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Превью загруженных изображений */}
+              {imagePreview.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                  {imagePreview.map((src, index) => (
+                    <div key={index} className="relative rounded-lg overflow-hidden h-32 bg-gray-100">
+                      <img src={src} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
-                        onClick={() => removeTag(tag)}
-                        className="hover:text-pink-600"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </button>
-                    </span>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-
-          {/* SEO */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">SEO настройки</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Meta Title
-                </label>
-                <input
-                  type="text"
-                  name="meta_title"
-                  value={formData.meta_title}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="Заголовок для поисковиков"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Meta Description
-                </label>
-                <textarea
-                  name="meta_description"
-                  value={formData.meta_description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
-                  placeholder="Описание для поисковиков (до 160 символов)"
-                />
-              </div>
+          
+          <div className="border-t border-gray-200 pt-4">
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? 'Сохранение...' : 'Сохранить товар'}
+              </button>
             </div>
-          </div>
-
-          {/* Кнопки */}
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Сохранение...' : 'Сохранить товар'}
-            </button>
-            
-            <Link
-              href="/admin_dashboard"
-              className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Отмена
-            </Link>
           </div>
         </form>
       </div>

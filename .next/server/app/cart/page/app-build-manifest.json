@@ -2,12 +2,12 @@
   "pages": {
     "/cart/page": [
       "static/chunks/[root-of-the-server]__090b39bd._.css",
-      "static/chunks/_9bb14388._.js",
-      "static/chunks/node_modules_6491c3ef._.js",
+      "static/chunks/_7bc52206._.js",
+      "static/chunks/node_modules_65521034._.js",
       "static/chunks/app_layout_tsx_c0237562._.js",
       "static/chunks/node_modules_42d1d136._.js",
       "static/chunks/app_cart_CartClient_tsx_7ba45aed._.js",
-      "static/chunks/app_cart_page_tsx_c69cb907._.js",
+      "static/chunks/app_cart_page_tsx_0c68030e._.js",
       "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_fd44f5a4._.js",
       "static/chunks/node_modules_next_dist_compiled_2ce9398a._.js",
       "static/chunks/node_modules_next_dist_client_8f19e6fb._.js",

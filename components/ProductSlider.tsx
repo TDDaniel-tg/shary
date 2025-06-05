@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 
@@ -180,7 +181,8 @@ export default function ProductSlider() {
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      loading="lazy"
+                      loading={product.id <= 2 ? undefined : "lazy"}
+                      priority={product.id <= 2}
                     />
                   </Link>
                   

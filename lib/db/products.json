@@ -1,0 +1,34 @@
+{
+  "products": [
+    {
+      "id": "3",
+      "name": "Воздушные шары \"Единорог\"",
+      "description": "Тематический набор шаров с изображением единорогов и звезд. Идеально подходит для детского праздника.",
+      "price": 1200,
+      "salePrice": 990,
+      "category": "themed",
+      "stock": 18,
+      "images": [
+        "/images/products/unicorn-set.jpg"
+      ],
+      "featured": true,
+      "published": true,
+      "createdAt": "2023-09-12T09:15:00Z"
+    },
+    {
+      "id": "5",
+      "name": "Латексные шары, розовые",
+      "description": "Набор из 50 латексных шаров пастельного розового цвета. Диаметр шаров 30 см.",
+      "price": 350,
+      "salePrice": 300,
+      "category": "single",
+      "stock": 120,
+      "images": [
+        "/images/products/pink-balloons.jpg"
+      ],
+      "featured": false,
+      "published": true,
+      "createdAt": "2023-08-25T11:10:00Z"
+    }
+  ]
+}

@@ -1,16 +1,10 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/admin/login/page": "app/admin/login/page.js",
   "/admin_dashboard/page": "app/admin_dashboard/page.js",
-  "/admin_dashboard/reviews/page": "app/admin_dashboard/reviews/page.js",
-  "/api/admin/auth/route": "app/api/admin/auth/route.js",
-  "/api/admin/reviews/pending/route": "app/api/admin/reviews/pending/route.js",
-  "/api/admin/stats/route": "app/api/admin/stats/route.js",
-  "/api/products/[id]/reviews/route": "app/api/products/[id]/reviews/route.js",
-  "/api/products/[id]/route": "app/api/products/[id]/route.js",
+  "/admin_dashboard/products/page": "app/admin_dashboard/products/page.js",
+  "/api/admin/products/[id]/route": "app/api/admin/products/[id]/route.js",
+  "/api/admin/products/route": "app/api/admin/products/route.js",
   "/api/products/route": "app/api/products/route.js",
-  "/cart/page": "app/cart/page.js",
   "/catalog/page": "app/catalog/page.js",
-  "/page": "app/page.js",
-  "/products/[id]/page": "app/products/[id]/page.js"
+  "/page": "app/page.js"
 }

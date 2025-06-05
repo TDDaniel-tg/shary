@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FloatingActionButton from '@/components/FloatingActionButton';
 import { CartProvider } from '@/hooks/useCart';
 
 const inter = Inter({ 
@@ -77,6 +78,7 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <FloatingActionButton />
           </div>
         </CartProvider>
       </body>

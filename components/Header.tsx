@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { Search, Phone, Menu, X, User, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { AuthModal } from './AuthModal';
@@ -55,26 +56,31 @@ export default function Header() {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Top header */}
-      <div className="bg-gray-100 border-b">
+    <motion.header 
+      className="sticky top-0 z-50 bg-white shadow-sm"
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+      {/* Top header - скрыт на мобильных */}
+      <div className="bg-gray-100 border-b hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-10">
-            <nav className="hidden md:flex space-x-6 text-sm">
+            <nav className="flex space-x-4 lg:space-x-6 text-sm">
               <Link href="/about" className="text-gray-600 hover:text-pink-500 transition-colors">
                 О нас
               </Link>
               <Link href="/catalog" className="text-gray-600 hover:text-pink-500 transition-colors">
-                Каталог товаров и услуг
+                Каталог
               </Link>
               <Link href="/delivery" className="text-gray-600 hover:text-pink-500 transition-colors">
-                Оплата и доставка
-              </Link>
-              <Link href="/faq" className="text-gray-600 hover:text-pink-500 transition-colors">
-                Вопросы и ответы
+                Доставка
               </Link>
               <Link href="/discounts" className="text-gray-600 hover:text-pink-500 transition-colors">
                 Скидки
+              </Link>
+              <Link href="/faq" className="text-gray-600 hover:text-pink-500 transition-colors">
+                FAQ
               </Link>
               <Link href="/reviews" className="text-gray-600 hover:text-pink-500 transition-colors">
                 Отзывы
@@ -83,32 +89,6 @@ export default function Header() {
                 Контакты
               </Link>
             </nav>
-            <div className="flex items-center space-x-4">
-              {currentUser ? (
-                <div className="flex items-center space-x-4">
-                  <button 
-                    onClick={() => setShowUserProfile(true)}
-                    className="flex items-center text-gray-600 hover:text-pink-500 transition-colors"
-                  >
-                    <User className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{currentUser.firstName || currentUser.username}</span>
-                  </button>
-                  <button 
-                    onClick={handleLogout}
-                    className="text-gray-600 hover:text-pink-500 text-sm transition-colors"
-                  >
-                    Выйти
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={() => setIsAuthModalOpen(true)} 
-                  className="text-gray-600 hover:text-pink-500 text-sm transition-colors"
-                >
-                  Вход / Регистрация
-                </button>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -288,6 +268,6 @@ export default function Header() {
           onLogout={handleLogout}
         />
       )}
-    </header>
+    </motion.header>
   );
 } 

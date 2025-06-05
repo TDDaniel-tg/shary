@@ -358,31 +358,32 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Contact Section */}
-          <section className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">Остались вопросы по условиям?</h2>
-            <p className="text-blue-100 mb-6">
+          {/* Contact Section - добавляем розовый блок */}
+          <section className="mt-16 mb-12 bg-pink-500 rounded-xl p-8 shadow-sm text-white">
+            <h2 className="text-3xl font-bold mb-6 text-center">Остались вопросы по условиям?</h2>
+            <p className="text-lg mb-8 text-center">
               Свяжитесь с нами для получения разъяснений по любым пунктам соглашения
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="tel:+74957734375"
-                className="bg-white text-blue-500 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center"
+            <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+              <a 
+                href="tel:+7 (495) 773-43-75" 
+                className="flex items-center gap-3 bg-white text-pink-500 px-6 py-3 rounded-lg font-medium hover:bg-pink-50 transition-colors"
               >
-                <Phone className="h-5 w-5 mr-2" />
+                <Phone className="h-5 w-5" />
                 +7 (495) 773-43-75
               </a>
-              <a
-                href="mailto:legal@primeballoons.ru"
-                className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-500 transition-colors flex items-center justify-center"
+              
+              <a 
+                href="mailto:legal@primeballoons.ru" 
+                className="flex items-center gap-3 bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white/10 transition-colors"
               >
-                <Mail className="h-5 w-5 mr-2" />
+                <Mail className="h-5 w-5" />
                 legal@primeballoons.ru
               </a>
             </div>
             
-            <div className="mt-8 text-sm text-blue-200">
+            <div className="mt-8 text-center text-sm text-white/80">
               <p>Юридический отдел ООО "Prime Balloons"</p>
               <p>Время работы: Пн-Пт 9:00-18:00, Сб-Вс 10:00-16:00</p>
             </div>

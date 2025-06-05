@@ -267,7 +267,7 @@ export default function DiscountsPage() {
             </div>
             
             <div className="bg-white bg-opacity-10 rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold mb-2">20%</div>
+              <div className="text-4xl font-bold mb-2">15%</div>
               <h3 className="font-semibold mb-2">Event-агентства</h3>
               <p className="text-sm text-blue-100">
                 Специальные условия для организаторов мероприятий
@@ -275,7 +275,7 @@ export default function DiscountsPage() {
             </div>
             
             <div className="bg-white bg-opacity-10 rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold mb-2">25%</div>
+              <div className="text-4xl font-bold mb-2">15%</div>
               <h3 className="font-semibold mb-2">VIP-клиенты</h3>
               <p className="text-sm text-blue-100">
                 Максимальная скидка при заказах свыше 100 000₽

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import StaggeredGrid from '@/components/StaggeredGrid';
 
 interface Category {
   id: number;
@@ -84,7 +85,11 @@ const categories: Category[] = [
 
 export default function CategoryGrid() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+    <StaggeredGrid 
+      animation="scale"
+      staggerDelay={0.1}
+      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"
+    >
       {categories.map((category) => (
         <Link
           key={category.id}
@@ -129,6 +134,6 @@ export default function CategoryGrid() {
           </div>
         </Link>
       ))}
-    </div>
+    </StaggeredGrid>
   );
 } 

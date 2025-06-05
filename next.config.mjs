@@ -18,7 +18,7 @@ const nextConfig = {
   },
 
   // Внешние пакеты для сервера
-  serverExternalPackages: ['jsonwebtoken'],
+  serverExternalPackages: ['jsonwebtoken', 'nodemailer', 'yookassa'],
 
   // Компрессия
   compress: true,
@@ -28,16 +28,15 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // Генерация статических страниц
-  generateStaticParams: async () => {
-    // Здесь можно определить статические параметры для динамических маршрутов
-    return [];
-  },
+
 
   // Webpack оптимизации
   webpack: (config, { isServer }) => {
-    // Фикс для ошибки 'self is not defined'
-    if (isServer) {
+    // Исключаем серверные модули из клиентского bundle
+    if (!isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('ioredis', 'nodemailer', 'yookassa', 'pg');
+      
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
@@ -45,6 +44,10 @@ const nextConfig = {
         dns: false,
         child_process: false,
         tls: false,
+        ioredis: false,
+        nodemailer: false,
+        yookassa: false,
+        pg: false,
       };
     } else {
       config.resolve.fallback = {

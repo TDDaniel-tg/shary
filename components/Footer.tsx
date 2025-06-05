@@ -1,15 +1,21 @@
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Instagram, Facebook, Youtube } from 'lucide-react';
+import AnimatedSection from '@/components/AnimatedSection';
+import StaggeredGrid from '@/components/StaggeredGrid';
 
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <StaggeredGrid 
+          animation="fadeUp"
+          staggerDelay={0.1}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+        >
           {/* Company Info */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Prime Balloons</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold text-white mb-4">Prime Balloons</h3>
+            <p className="text-gray-300 mb-4">
               Prime Balloons - ваш надежный партнер в создании незабываемых праздников. 
               Мы предлагаем широкий ассортимент качественных воздушных шаров и праздничного декора 
               с быстрой доставкой по Москве.
@@ -17,21 +23,21 @@ export default function Footer() {
             <div className="flex space-x-4">
               <a
                 href="https://instagram.com"
-                className="text-gray-400 hover:text-pink-400 transition-colors"
+                className="text-gray-400 hover:text-pink-400 transition-colors transform hover:scale-110"
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
               </a>
               <a
                 href="https://facebook.com"
-                className="text-gray-400 hover:text-blue-400 transition-colors"
+                className="text-gray-400 hover:text-blue-400 transition-colors transform hover:scale-110"
                 aria-label="Facebook"
               >
                 <Facebook className="h-5 w-5" />
               </a>
               <a
                 href="https://youtube.com"
-                className="text-gray-400 hover:text-red-400 transition-colors"
+                className="text-gray-400 hover:text-red-400 transition-colors transform hover:scale-110"
                 aria-label="YouTube"
               >
                 <Youtube className="h-5 w-5" />
@@ -44,22 +50,22 @@ export default function Footer() {
             <h4 className="font-semibold mb-4">Покупателям</h4>
             <ul className="space-y-2 text-gray-300">
               <li>
-                <Link href="/catalog" className="hover:text-white transition-colors">
+                <Link href="/catalog" className="hover:text-white transition-colors hover:translate-x-1">
                   Каталог товаров
                 </Link>
               </li>
               <li>
-                <Link href="/delivery" className="hover:text-white transition-colors">
+                <Link href="/delivery" className="hover:text-white transition-colors hover:translate-x-1">
                   Доставка и оплата
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="hover:text-white transition-colors">
+                <Link href="/returns" className="hover:text-white transition-colors hover:translate-x-1">
                   Возврат товара
                 </Link>
               </li>
               <li>
-                <Link href="/guarantee" className="hover:text-white transition-colors">
+                <Link href="/guarantee" className="hover:text-white transition-colors hover:translate-x-1">
                   Гарантии
                 </Link>
               </li>
@@ -73,7 +79,7 @@ export default function Footer() {
               <li>
                 <Link 
                   href="/catalog?category=Воздушные шары" 
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors hover:translate-x-1"
                 >
                   Воздушные шары
                 </Link>
@@ -81,7 +87,7 @@ export default function Footer() {
               <li>
                 <Link 
                   href="/catalog?category=Детские праздники" 
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors hover:translate-x-1"
                 >
                   Детские праздники
                 </Link>
@@ -89,7 +95,7 @@ export default function Footer() {
               <li>
                 <Link 
                   href="/catalog?category=Свадебные украшения" 
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors hover:translate-x-1"
                 >
                   Свадебные украшения
                 </Link>
@@ -97,7 +103,7 @@ export default function Footer() {
               <li>
                 <Link 
                   href="/catalog?category=Праздничная посуда" 
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors hover:translate-x-1"
                 >
                   Праздничная посуда
                 </Link>
@@ -109,19 +115,19 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Контакты</h4>
             <div className="space-y-3 text-gray-300">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 hover:text-white transition-colors">
                 <Phone className="h-4 w-4 flex-shrink-0" />
                 <a href="tel:+7(999)123-45-67" className="hover:text-white transition-colors">
                   +7 (999) 123-45-67
                 </a>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 hover:text-white transition-colors">
                 <Mail className="h-4 w-4 flex-shrink-0" />
                 <a href="mailto:info@prazdnik-store.ru" className="hover:text-white transition-colors">
                   info@prazdnik-store.ru
                 </a>
               </div>
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-3 hover:text-white transition-colors">
                 <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <span>г. Москва, ул. Праздничная, д. 15</span>
               </div>
@@ -133,28 +139,30 @@ export default function Footer() {
               </p>
             </div>
           </div>
-        </div>
+        </StaggeredGrid>
       </div>
 
       {/* Bottom Bar */}
       <div className="border-t border-gray-700">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-gray-400 text-sm">
-              © 2024 Праздник Store. Все права защищены.
+          <AnimatedSection animation="fadeUp" threshold={0.5}>
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <div className="text-gray-400 text-sm">
+                © 2024 Праздник Store. Все права защищены.
+              </div>
+              <div className="flex space-x-6 text-sm text-gray-400">
+                <Link href="/privacy" className="hover:text-white transition-colors">
+                  Политика конфиденциальности
+                </Link>
+                <Link href="/terms" className="hover:text-white transition-colors">
+                  Пользовательское соглашение
+                </Link>
+                <Link href="/cookies" className="hover:text-white transition-colors">
+                  Использование cookies
+                </Link>
+              </div>
             </div>
-            <div className="flex space-x-6 text-sm text-gray-400">
-              <Link href="/privacy" className="hover:text-white transition-colors">
-                Политика конфиденциальности
-              </Link>
-              <Link href="/terms" className="hover:text-white transition-colors">
-                Пользовательское соглашение
-              </Link>
-              <Link href="/cookies" className="hover:text-white transition-colors">
-                Использование cookies
-              </Link>
-            </div>
-          </div>
+          </AnimatedSection>
         </div>
       </div>
     </footer>

@@ -57,7 +57,7 @@ export default function AdminLogin() {
             Вход в админ панель
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            🎈 Balloons Store - Управление интернет-магазином
+            🎈 Prime Balloons - Управление интернет-магазином
           </p>
         </div>
         
@@ -125,10 +125,17 @@ export default function AdminLogin() {
             </button>
           </div>
 
-          <div className="text-center text-sm text-gray-500">
-            <p>Тестовые данные для входа:</p>
-            <p>Email: admin@balloons.com</p>
-            <p>Пароль: admin123</p>
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm">
+              <a href="#" className="font-medium text-pink-600 hover:text-pink-500">
+                Забыли пароль?
+              </a>
+            </div>
+            <div className="text-sm">
+              <a href="/" className="font-medium text-gray-600 hover:text-gray-500">
+                Вернуться на сайт
+              </a>
+            </div>
           </div>
         </form>
       </div>
